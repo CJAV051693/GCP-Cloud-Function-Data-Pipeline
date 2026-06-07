@@ -1,0 +1,18 @@
+############################################################################################################
+# This template can be used for SAST and http scan compliance check.
+# It takes parameter AIR_ID
+############################################################################################################
+
+parameters:
+- name: AIR_ID
+  default: ''
+
+steps:
+- task: SASTScanTask@0
+  inputs:
+    air_id: ${{ parameters.AIR_ID }}
+
+- task: ApplicationCodeScan@0
+  inputs:
+    air_id: ${{ parameters.AIR_ID }}
+    scan_restriction_chk: true

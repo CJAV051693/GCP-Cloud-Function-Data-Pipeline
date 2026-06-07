@@ -1,0 +1,30 @@
+##################################################################################################
+# This file is a template for variables being used inside pipeline independent of the environment
+##################################################################################################
+parameters:
+- name: action
+  default: ''
+
+variables:
+ 
+  TF_CF_MODULE_VERSION: '3.0.1'
+  TF_CS_MODULE_VERSION: '3.0.0'
+  TF_PUBSUBMODULE_VERSION: '2.0.1'
+  TF_STORAGEMODULE_VERSION: '3.0.0'
+  TF_SM_MODULE_VERSION: '1.3.0'
+  TOOL_TF_VERSION: '1.2.9'
+
+  ################################################################
+  ########### Below variables DO NOT require a change  ###########
+  TOOL_TF_PIPELINE_NAME: '$(Build.DefinitionName)'
+  TOOL_PATH: '$(System.DefaultWorkingDirectory)/tools'
+  SQL_FOLDER: $(SRC_PATH_TF_CODE)/data
+  TF_CF_MODULE_SOURCE: 'acnciotfregistry.accenture.com/accenture-cio/functiongen2/google'
+  TF_CS_MODULE_SOURCE: 'acnciotfregistry.accenture.com/accenture-cio/cloudscheduler/google'
+  SRC_PATH_TF_CODE: '$(System.DefaultWorkingDirectory)'
+  SRC_PATH_CODE: '$(System.DefaultWorkingDirectory)/code'
+  TF_STATE_FILES_CREDENTIALS: '$(securefiledefaultsa.secureFilePath)'
+  GCP_PROJECT_CREDENTIAL_FILE_PATH: "/home/vsts/work/1/s/D:/ref/gcp/gcpLogin.json"
+  TOOL_TF_RELEASE_ID: '$(Build.BuildId)'
+  TRIGGER_FUNCTION_ENTRYPOINT: 'call_destroy_azure'
+  GCP_BUCKET_NAME: 'destroy-function-bucket'

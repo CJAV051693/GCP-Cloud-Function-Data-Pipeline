@@ -1,0 +1,29 @@
+##################################################################################
+# This template can be used Maven jar build.
+# It takes POM_file_path, PathtoPublish_jar and  ArtifactName_jar as parameter for Maven build.
+# It builds the jar and publishes the same.
+##################################################################################
+
+parameters:
+- name: POM_file_path
+  default: ''
+- name: PathtoPublish_jar
+  default: ''
+- name: ArtifactName_jar
+  default: ''
+
+steps:
+- task: Maven@3
+  displayName: 'Maven Build'
+  inputs:
+    mavenPomFile: ${{ parameters.POM_file_path }}
+    goals: 'clean install'
+    publishJUnitResults: false
+    pmdRunAnalysis: true
+    findBugsRunAnalysis: true
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: jar file'
+  inputs:
+    PathtoPublish: ${{ parameters.PathtoPublish_jar }}
+    ArtifactName: ${{ parameters.ArtifactName_jar }}

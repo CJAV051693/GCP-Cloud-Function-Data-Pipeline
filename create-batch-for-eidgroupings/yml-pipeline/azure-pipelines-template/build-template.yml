@@ -1,0 +1,57 @@
+###########################################################################################
+## This YML is being consumed by build pipeline and it is consuming all the tasks from 
+## build-task-templates passing all required parameters .
+## Below 4 stages are mentioned here
+# 1. Compliance_Check - It runs tasks for SAST and HTTP scan
+# 2. Code_Quality_Check - It runs tasks for Pylint check, BQ code analysis and BQ dry run
+# 3. Airflow_Code_Scan - This is to run airflow listDag which checks the DAGs syntactically.
+# 4. Prepare_Publish_artifacts - This is building and publishing artifacts.
+###########################################################################################
+
+parameters:
+- name: AIR_ID
+  default: ''
+- name: PYTHON_VERSION
+  default: ''
+- name: pylint_version
+  default: ''
+- name: GCP_PROJECT_ID
+  default: ''
+- name: jobname
+  default: ''
+- name: pylint_min_rank
+  default: 10
+
+stages:
+- stage: Compliance_Check
+  jobs:
+  - job: Security_asap
+    steps:
+    - template: build-task-templates/Scan-tasks.yml
+      parameters:
+        AIR_ID: ${{ parameters.AIR_ID }}        
+
+- stage: Code_Quality_Check
+  jobs:
+  - job: Pylint_Check
+    steps:
+    - template: build-task-templates/pylint-check.yml
+      parameters:
+        PYTHON_VERSION: ${{ parameters.PYTHON_VERSION }}
+        pylint_version: ${{ parameters.pylint_version }}
+        pylint_min_rank: ${{ parameters.pylint_min_rank }}
+  
+- stage: Prepare_Publish_artifacts
+  jobs:
+  - job: Prepare_Publish_artifacts
+    steps:
+    - template: build-task-templates/build-archive.yml
+      parameters:
+        taskName: 'Archive tf-code'
+        archiveFolder: 'terraform_v2'
+        archiveFileName: '$(Build.ArtifactStagingDirectory)/outputtfcode/$(Build.BuildId).zip'
+    - template: build-task-templates/build-publish.yml
+      parameters:
+        taskName: 'Publish tf-code'
+        pathToPublish: '$(Build.ArtifactStagingDirectory)/outputtfcode'
+        artifactName: 'terraform_code'

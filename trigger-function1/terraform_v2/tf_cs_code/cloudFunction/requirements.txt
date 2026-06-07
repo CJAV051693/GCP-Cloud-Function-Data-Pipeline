@@ -1,0 +1,10 @@
+google-cloud-storage
+cryptography==2.8
+crcmod
+google-cloud-secret-manager
+functions-framework
+google-cloud-bigquery==3.38.0
+pandas==2.3
+numpy==2.3
+db-dtypes
+google-cloud-scheduler

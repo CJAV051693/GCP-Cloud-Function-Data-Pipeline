@@ -1,0 +1,117 @@
+###############################################################################################
+# This template can be used for tf resource creation..
+# It takes input as working directory where tf files would exist.
+# It also takes care in case of any issues in the resource creation or taint resources created.
+###############################################################################################
+
+parameters:
+- name: workingDir
+  default: ''
+
+steps:
+- task: Bash@3
+  displayName: Terraform execution for resource creation or update
+  inputs:
+    targetType: 'inline'
+    script: |
+      #!/bin/bash
+      # --------- Auxiliar Functions --------- 
+      function mainHeader () {
+        echo ""
+        echo ""
+        echo ""
+        echo "***************************************************************************"
+        echo " $1" 
+        echo "***************************************************************************" 
+      }
+      
+      function header () {
+        echo ""
+        echo "----------------------------------------------------"
+        echo " $1" 
+      }
+      
+      
+      function message () {
+        echo "$1"
+      }
+      
+      function setValue () {
+        echo "> $1"
+      }
+      
+      function footer () {
+        echo ""
+        echo "----------------------------------------------------"
+        echo ""
+        echo ""
+      }
+      
+      function mainFooter () {
+        echo "" 
+        echo "***************************************************************************"
+        echo ""
+        echo ""
+        echo ""
+      }      
+      
+      ls $(System.DefaultWorkingDirectory)
+      echo "________________________"
+      
+      mainHeader "Terraform - Init + Plan"
+      
+      footer 
+      
+      header "Terraform.tfvars file content"
+
+      echo $(Hashi_tf_backend.AzClientID)
+      echo $(Hashi_tf_backend.AzClientSecret)
+
+      export GOOGLE_APPLICATION_CREDENTIALS=$(GCP_CRED)
+      export ARM_CLIENT_ID=$(Hashi_tf_backend.AzClientID)
+      export ARM_CLIENT_SECRET=$(Hashi_tf_backend.AzClientSecret)
+      export ARM_TENANT_ID=$(TENANT_ID)
+
+      tfVarsFileName=tokenized.terraform._tfvars
+      
+      setValue "File terraform.tfvars content: "
+      cat $tfVarsFileName
+      echo ""
+      footer
+      
+      header "Terraform - Init"
+      terraform init
+      footer
+      
+      header "Terraform - Plan"
+      terraform plan -input=false -var-file=$tfVarsFileName
+      footer
+      
+      header "Terraform - Apply"
+      terraform apply -auto-approve -input=false -var-file=$tfVarsFileName
+      
+      ################## CHECKING RET CODE ##############
+      ret_code=`echo $?`
+      if [[ "$ret_code" -eq 1 ]]; then
+          echo "Some issue occured while resource creation ... please check logs."
+          exit 1
+      fi
+      
+      footer
+      
+      ################## checking taint resources ##############
+      
+      echo "Getting information about taint resources, if any ::"
+      terraform show -json > plan1.json
+      #cat plan1.json
+      taint_res=`cat ./plan1.json | jq .values.root_module.child_modules[]| jq .resources | jq -c '.[] | select(.["tainted"])' | jq .address`
+      if [[ $taint_res ]]; then
+      echo "Below resources are tainted, please check ---> "
+      echo "$taint_res"
+      exit 1
+      fi
+      echo "No taint resources found..."
+      echo "Pipeline execution completed successfully...."
+      
+      mainFooter
+    workingDirectory: ${{ parameters.workingDir }}

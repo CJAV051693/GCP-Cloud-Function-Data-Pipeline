@@ -1,0 +1,9 @@
+###################################################################################################
+# This template can be used for BQ code analysis.
+# It scans the queries for certain thresholds and conditions and in case anything crosses threshold.
+####################################################################################################
+
+steps:
+- task: CIODevArch.cap-BQ-static-code-analysis.custom-build-release-task.CAP BQ static code analysis@1
+  displayName: 'CAP BQ Static code analysis'
+  enabled: true

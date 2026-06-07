@@ -1,0 +1,14 @@
+###############################################################################################
+# The Post Build Cleanup task deletes unwanted files from your build agent,
+# after your build has run, thus, saving precious disk space.
+###############################################################################################
+parameters:
+- name: TOOL_TF_VERSION
+  default: ''
+
+
+steps:
+- task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
+  displayName: 'Install Terraform   '
+  inputs:
+    terraformVersion: ${{ parameters.TOOL_TF_VERSION }}

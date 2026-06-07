@@ -1,0 +1,14 @@
+#----------------------------------------------------------------------------------
+# This template is used to remove the requested Hashi Lease Id
+#----------------------------------------------------------------------------------
+
+parameters:
+- name: HASHI_ENDPOINT
+  default: ''
+
+steps:
+- task: CIODevOps.hashicorp-vault-remove-gcp-key.custom-build-release-task.HashiVaultRmGCPKey@0
+  displayName: 'HashiCorp Vault Remove Lease'
+  inputs:
+    HashiEndpoint: ${{ parameters.HASHI_ENDPOINT }}
+    LeaseId: '$(Hashi.LeaseId)'

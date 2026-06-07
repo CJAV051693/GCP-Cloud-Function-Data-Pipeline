@@ -1,0 +1,20 @@
+##################################################################################
+# This template can be used building artifacts.
+# It takes artifacts Folder and then archives it.
+##################################################################################
+
+parameters:
+- name: archiveFolder
+  default: ''
+- name: archiveFileName
+  default: ''
+- name: taskName
+  default: ''
+steps:
+- task: ArchiveFiles@2
+  displayName: ${{ parameters.taskName }}
+  inputs:
+    rootFolderOrFile: ${{ parameters.archiveFolder }}
+    includeRootFolder: false
+    archiveFile: ${{ parameters.archiveFileName }}
+  enabled: true

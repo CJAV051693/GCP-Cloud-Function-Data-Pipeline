@@ -1,0 +1,54 @@
+############################################################################################################
+# This template can be used for Pylint code scan check.
+# It measures the code quality and provides a rank out of 10.
+# If a threshold is passed then it would fail the task if the rank is below pylint_min_rank then it fails the task.
+############################################################################################################
+
+parameters:
+- name: CODE_DIR
+  default: ''
+- name: PathtoPublish_testResults
+  default: ''
+- name: ArtifactName_testResults
+  default: ''
+- name: cobertura_summaryFileLocation
+  default: ''
+- name: cobertura_reportDirectory
+  default: ''
+- name: jobname_dataproc
+  default: ''
+
+
+steps:
+- task: CmdLine@2
+  displayName: run cobertura code coverage
+  inputs:
+    targetType: 'inline'
+    script: |
+      #cd dataproc/spark/$(jobname)
+      #cd ${{ parameters.CODE_DIR }}
+      mvn clean cobertura:cobertura -Dcobertura.report.format=xml
+      mvn cobertura:cobertura -Dcobertura.report.format=html
+    workingDirectory: ${{ parameters.CODE_DIR }}
+  enabled: true
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: test results'
+  inputs:
+    PathtoPublish: ${{ parameters.PathtoPublish_testResults }}
+    ArtifactName: ${{ parameters.ArtifactName_testResults }}
+  enabled: false
+
+- task: PublishTestResults@2
+  displayName: 'Publish Test Results **/TEST-*.xml '
+  inputs:
+    testResultsFormat: JUnit
+    testResultsFiles: '**/TEST-*.xml'
+    testRunTitle: 'testResults'
+
+- task: PublishCodeCoverageResults@1
+  displayName: 'Publish code coverage from dataproc/spark/$(jobname_dataproc)/target/site/cobertura/coverage.xml'
+  inputs:
+    codeCoverageTool: Cobertura
+    summaryFileLocation: ${{ parameters.cobertura_summaryFileLocation }}
+    reportDirectory: ${{ parameters.cobertura_reportDirectory }}

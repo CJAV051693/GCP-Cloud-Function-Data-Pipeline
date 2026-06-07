@@ -1,0 +1,32 @@
+parameters:
+- name: SRC_PATH_TF_CODE
+  default: ''
+- name: GCP_PROJECT_ID
+  default: ''
+
+steps:
+- task: Bash@3
+  displayName: Unzip DAGs
+  inputs:
+    targetType: 'inline'
+    script: |
+      ls -lrt $(System.ArtifactsDirectory)/
+      cd $(System.ArtifactsDirectory)/bq_dag
+      
+      unzip *.zip -d ./dags
+      cd  $(System.ArtifactsDirectory)/bq_dag/dags
+      ls -lrt
+
+      echo "Checking terraform code.."
+      cd $(System.ArtifactsDirectory)/terraform_code
+      ls -lrt
+      
+      echo "Here we have the destroy dag"
+      ls -lrt ${{ parameters.SRC_PATH_TF_CODE }}/tf_composer_code/DestroyDag/Module_destroy
+      
+      echo "Fetching corresponding projectlist.conf"
+      env_name=`echo ${{ parameters.GCP_PROJECT_ID }} | cut -d "-" -f1`
+      cp -r $(System.ArtifactsDirectory)/bq_dag/dags/conf_files/$env_name/projectlist.conf  $(System.ArtifactsDirectory)/bq_dag/dags/conf_files/projectlist.conf
+      
+      echo "Removing all env folders.."
+      rm -r $(System.ArtifactsDirectory)/bq_dag/dags/conf_files/*/

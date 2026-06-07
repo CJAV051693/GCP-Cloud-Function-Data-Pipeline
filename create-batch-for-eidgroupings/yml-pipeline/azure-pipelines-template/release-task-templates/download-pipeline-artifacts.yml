@@ -1,0 +1,19 @@
+#####################################################################################
+# This template can be used to download pipeline artifacts.
+# It takes parameters as build_pipeline_name of which artifacts to be downloaded
+######################################################################################
+
+parameters:
+- name: build_pipeline_name
+  default: ''
+
+steps:
+- task: DownloadPipelineArtifact@2
+  displayName: Downloading artifacts from build
+  inputs:
+    source: 'specific'
+    pipeline: ${{ parameters.build_pipeline_name }}
+    project: '$(System.TeamProject)'
+    #artifact: 'bq_dag'
+    allowPartiallySucceededBuilds: true
+    path: '$(System.ArtifactsDirectory)'

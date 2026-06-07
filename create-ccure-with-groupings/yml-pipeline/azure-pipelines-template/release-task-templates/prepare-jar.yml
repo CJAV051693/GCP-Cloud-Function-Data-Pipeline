@@ -1,0 +1,29 @@
+parameters:
+- name: SRC_PATH_JAR
+  default: ''
+
+steps:
+- task: Bash@3
+  displayName: Preparing JAR Resources
+  inputs:
+    targetType: 'inline'
+    script: |
+      #!/bin/bash
+      if [ ! -d $(SRC_PATH_JAR) ]
+      then
+          echo "INFO - Jar folder does not exist. Creating.........."
+          mkdir $(SRC_PATH_JAR)
+      else
+          echo "INFO - Jar folder already exist. ............................."
+      fi
+      # Working with the JAR file
+      echo "INFO - Copying the Jar file to the target folder......"
+      sourceAlias="_"$(Build.DefinitionName)
+      unzip $(System.ArtifactsDirectory)/dependencies/dependencies.zip -d $(SRC_PATH_JAR)
+      cp $(System.ArtifactsDirectory)/dp-spark-jar/*spark*.jar $(SRC_PATH_JAR)
+      #cp $(System.DefaultWorkingDirectory)/$sourceAlias/dependencies/*.jar $(SRC_PATH_JAR)
+      cp -R $(SRC_PATH_JAR)/dependencies/*.jar $(SRC_PATH_JAR)
+      echo "INFO - Target folder after activity.............................."
+      echo $(SRC_PATH_JAR)
+      cd $(SRC_PATH_JAR)
+      ls -lrt

@@ -1,0 +1,36 @@
+parameters:
+- name: SRC_PATH_TF_CODE
+  default: ''
+
+steps:
+- task: Bash@3
+  displayName: Preparing terraform code from artifacts
+  inputs:
+    targetType: 'inline'
+    script: |
+      #!/bin/bash
+      
+      if [ ! -d ${{ parameters.SRC_PATH_TF_CODE }} ]
+      then
+          echo "INFO - Terraform Code folder does not exist. Creating.........."
+          mkdir ${{ parameters.SRC_PATH_TF_CODE }}
+      else
+          echo "INFO - Code folder already exist. ............................."
+      fi
+      # Working with the Properties folder
+      echo "INFO - Uncompressing the Code Resources zip file........"
+      sourceAlias="_"$(Build.DefinitionName)
+      unzip $(System.ArtifactsDirectory)/terraform_code/*.zip -d ${{ parameters.SRC_PATH_TF_CODE }}
+      echo "INFO - Copying the resources to the target folder........."
+      echo "INFO - Resources source path: ${{ parameters.SRC_PATH_TF_CODE }}"
+      cp -R ${{ parameters.SRC_PATH_TF_CODE }}/*/*  ${{ parameters.SRC_PATH_TF_CODE }}
+      rm -rf $(SRC_PATH_CODE)/*/
+      echo "INFO - Target folder after activity ........................................"
+      echo ${{ parameters.SRC_PATH_TF_CODE }}
+      cd  ${{ parameters.SRC_PATH_TF_CODE }}/tf_composer_code
+      ls -lrt
+      echo "working directory is -->"
+      pwd
+      echo "Checking artifacts..."
+      cd $(System.ArtifactsDirectory)
+      ls -lrt

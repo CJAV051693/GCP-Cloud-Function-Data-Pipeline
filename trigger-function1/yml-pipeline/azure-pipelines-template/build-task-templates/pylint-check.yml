@@ -1,0 +1,31 @@
+############################################################################################################
+# This template can be used for Pylint code scan check.
+# It measures the code quality and provides a rank out of 10.
+# If a threshold is passed then it would fail the task if the rank is below pylint_min_rank then it fails the task.
+############################################################################################################
+
+parameters:
+- name: PYTHON_VERSION
+  default: ''
+- name: pylint_version
+  default: ''
+- name: pylint_min_rank
+  default: 10
+
+steps:
+- task: UsePythonVersion@0
+  displayName: 'Use Python ${{ parameters.PYTHON_VERSION }}'
+  inputs:
+    versionSpec: ${{ parameters.PYTHON_VERSION }}
+  enabled: true
+
+- task: Bash@3
+  displayName: Pylint
+  inputs:
+    targetType: 'inline'
+    script: |
+      python --version
+      pip install pylint==${{ parameters.pylint_version }}
+      find . -iname "*.py" | xargs pylint --fail-under=${{ parameters.pylint_min_rank }}
+ #enabled: true 
+  continueOnError: true

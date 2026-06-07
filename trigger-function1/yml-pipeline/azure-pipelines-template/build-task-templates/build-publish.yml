@@ -1,0 +1,20 @@
+##################################################################################
+# This template can be used publishing artifacts.
+# It takes artifacts name and path to publish and then publishes it.
+##################################################################################
+
+parameters:
+- name: pathToPublish
+  default: ''
+- name: artifactName
+  default: ''
+- name: taskName
+  default: ''
+
+steps:
+- task: PublishBuildArtifacts@1
+  displayName: ${{ parameters.taskName }}
+  inputs:
+    PathtoPublish: ${{ parameters.pathToPublish }}
+    ArtifactName: ${{ parameters.artifactName }}
+  enabled: true

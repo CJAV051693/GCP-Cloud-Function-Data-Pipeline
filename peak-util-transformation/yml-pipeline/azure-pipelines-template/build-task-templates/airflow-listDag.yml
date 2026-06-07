@@ -1,0 +1,135 @@
+##################################################################################
+# This template can be used to check DAGs syntactically.
+# It lists all the DAGs which are good to install and also shows DAGs with issues.
+# It takes parameters as GCP_PROJECT_ID, jobname and PYTHON_VERSION
+##################################################################################
+
+parameters:
+- name: GCP_PROJECT_ID
+  default: ''
+- name: jobname
+  default: ''
+- name: PYTHON_VERSION
+  default: ''
+
+steps:
+  - task: UsePythonVersion@0
+    displayName: 'Use Python ${{ parameters.PYTHON_VERSION }}'
+    inputs:
+      versionSpec: ${{ parameters.PYTHON_VERSION }}
+    enabled: true
+
+  - task: Bash@3
+    name: installAirflow
+    displayName: 'airflow list dag'
+    inputs:
+      targetType: 'inline'
+      script: |
+        ################# AIRFLOW INSTALLATION and DAG CHECK
+        python --version
+        pip install -r $(Build.SourcesDirectory)/DAGS/python/requirements.txt
+        envr_name=`echo ${{ parameters.GCP_PROJECT_ID }} | cut -d "-" -f1`
+        echo "env name is --> $envr_name"
+        airflow initdb
+        echo "test airflow"
+        airflow version
+        cd ~/airflow
+        rm -rf dags
+        mkdir dags
+        cd dags
+        
+        #### copying dags to airflow folder based on job
+        job_name=`echo ${{ parameters.jobname }} | tr '[:lower:]' '[:upper:]'`
+        echo "Preparing dags for job :: --> $job_name"
+        if [[ $job_name == "ALL" ]]
+        then
+        ### copying All dags into single folder if jobname is all
+        cp -r $(Build.SourcesDirectory)/DAGS/* .
+        rm -rf python
+        else
+        ### copying single job in case of specific job
+        cp -r $(Build.SourcesDirectory)/DAGS/$(jobname) .
+        cp -r $(Build.SourcesDirectory)/DAGS/conf_files .
+        cp -r $(Build.SourcesDirectory)/DAGS/common_modules .
+        if [[ -d "$(Build.SourcesDirectory)/DAGS/ddl" ]] 
+        then
+          # Take action if $DIR exists. #
+        echo "Copying DDL folder as well.."
+        cp -r $(Build.SourcesDirectory)/DAGS/ddl .
+        else
+        echo "No DDL exists"
+        fi
+        
+        fi
+        
+        cp conf_files/$envr_name/projectlist.conf conf_files/projectlist.conf
+        airflow list_dags -r >> $(Build.ArtifactStagingDirectory)/list_dag.txt
+        cat $(Build.ArtifactStagingDirectory)/list_dag.txt
+        #################### CHECKING FOR ANY FAILED DAG
+        
+        # Write your commands here
+        err_flag=0
+        
+        daginfo=`awk '$0 == "DAGS" {i=1;next};i' "$(Build.ArtifactStagingDirectory)/list_dag.txt"`
+        
+        echo "$daginfo" | tr " " "\n"  > "$(Build.ArtifactStagingDirectory)/list_dag.txt"
+        
+        sed '/-------/d;/example_/d;/tutorial/d;/test_utils/d;/latest_only/d' -i "$(Build.ArtifactStagingDirectory)/list_dag.txt"
+        
+        echo "Below are the syntactically correct DAGs ---> "
+        cat "$(Build.ArtifactStagingDirectory)/list_dag.txt"
+        
+        job_name=`echo ${{ parameters.jobname }} | tr '[:lower:]' '[:upper:]'`
+        #echo "Preparing dags for job :: --> $job_name"
+        if [[ $job_name == "ALL" ]]
+        then
+        #echo "Getting all the DAGs ---->"
+        cd $(Build.SourcesDirectory)/DAGS/
+        echo " " > status.txt
+        for i in $(ls -d */); 
+        do 
+          dag_name=`echo ${i%%/}`
+          if grep -Fxq "$dag_name" "$(Build.ArtifactStagingDirectory)/list_dag.txt"
+          then
+            echo " "
+            #echo "$dag_name DAG found."
+          else
+            if [[ $dag_name != "ddl" &&  $dag_name != "python" && $dag_name != "conf_files" && $dag_name != "common_modules" && $dag_name != "tst"* ]]
+            then
+                  err_flag=1
+                  echo "$dag_name" >> status.txt
+            fi
+            fi 
+          
+        done
+        if [[ $err_flag -eq 1 ]] 
+            then
+              echo "Below DAGs are failed in scan... please check."
+              cat status.txt
+              rm -rf status.txt
+              exit 1
+            else
+              echo "Scanned completed.."
+              rm -rf status.txt
+            fi
+        else
+        echo "Checking if dag present in listDag output -->"
+        if grep -Fxq "${{ parameters.jobname }}" "$(Build.ArtifactStagingDirectory)/list_dag.txt"
+          then
+            echo "${{ parameters.jobname }} DAG found."
+          else
+            err_flag=1
+            echo "${{ parameters.jobname }}" >> status.txt
+            fi 
+            if [[ $err_flag -eq 1 ]] 
+            then
+              echo "Below DAGs are failed in scan... please check."
+              cat status.txt
+              rm -rf status.txt
+              exit 1
+            else
+              rm -rf status.txt
+              echo "Scanned completed.."
+            fi
+        fi
+    enabled: true

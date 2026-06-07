@@ -1,0 +1,30 @@
+##################################################################################
+# This template can be used to replace the variables in tf files with pipeline var values..
+# It takes input as an object where user needs to provide a list per below format
+# [{dir_name:"", file_list:["file1","file2",...]},{},{},{},...]
+# here dir_name is the name of directory name
+# here file_list is the list of files in mentioned directory
+##################################################################################
+
+parameters:
+- name: INPUT_DIR_FILE
+  type: object
+  default: []
+
+steps:
+- ${{ each item in parameters.INPUT_DIR_FILE }}: 
+  - ${{ each file_name in item.file_list }}:
+    - task: replacetokens@6
+      displayName: Terraform setup replace token task
+      inputs:
+        rootDirectory: '${{ item.dir_name }}'  
+        targetFiles: |
+              ${{ file_name }}=>${{ file_name }}
+        encoding: 'auto'
+        addBOM: true
+        missingVarLog: 'warn'
+        keepToken: false
+        tokenPrefix: '#{'
+        tokenSuffix: '}#'
+        ifNoFilesFound: warn
+        telemetryOptout: true

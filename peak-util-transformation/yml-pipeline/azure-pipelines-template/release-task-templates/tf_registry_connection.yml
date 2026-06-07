@@ -1,0 +1,7 @@
+############################################################################################################
+# This template can be used to get connected to CCS TF registry and make use of
+# all available modules there.
+############################################################################################################
+steps:
+- task: AzureDevOps Build Agent TF Cli Config File Generator@1
+  displayName: 'AzureDevOps Build Agent TF Cli Config File Generator'

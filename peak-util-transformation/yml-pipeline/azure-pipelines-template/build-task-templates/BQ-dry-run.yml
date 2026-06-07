@@ -1,0 +1,11 @@
+#######################################################################################################
+# This template can be used for BQ dry run.
+# It estimates how much memory bytes it is going to take when the Query is actually going to run on GCP.
+# Threshold can be provided to this and then in case the query crosses threshold the task would Fail
+########################################################################################################
+
+steps:
+
+- task: CIODevArch.cap-bq-dry-run.custom-build-release-task.CAP BQ Dry Run@1
+  displayName: 'CAP BQ Dry run'
+  enabled: false

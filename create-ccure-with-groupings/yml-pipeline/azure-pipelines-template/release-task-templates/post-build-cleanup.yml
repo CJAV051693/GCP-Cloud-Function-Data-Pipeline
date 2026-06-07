@@ -1,0 +1,8 @@
+###############################################################################################
+# The Post Build Cleanup task deletes unwanted files from your build agent,
+# after your build has run, thus, saving precious disk space.
+###############################################################################################
+
+steps:
+- task: mspremier.PostBuildCleanup.PostBuildCleanup-task.PostBuildCleanup@3
+  displayName: 'Terraform clean directories'

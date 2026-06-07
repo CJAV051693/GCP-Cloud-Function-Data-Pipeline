@@ -1,0 +1,26 @@
+##################################################################################
+# This template can be used building and publishing artifacts.
+# It takes artifacts name and Folder and then archives and publishes it.
+##################################################################################
+
+parameters:
+- name: archiveFolder
+  default: ''
+- name: artifactName
+  default: ''
+
+steps:
+- task: ArchiveFiles@2
+  displayName: 'Archive Artifacts'
+  inputs:
+    rootFolderOrFile: ${{ parameters.archiveFolder }}
+    includeRootFolder: false
+    archiveFile: '$(Build.ArtifactStagingDirectory)/output/$(Build.BuildId).zip'
+  enabled: true
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: ${{ parameters.artifactName }}'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/output'
+    ArtifactName: ${{ parameters.artifactName }}
+  enabled: true

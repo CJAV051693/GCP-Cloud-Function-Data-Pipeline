@@ -1,0 +1,31 @@
+parameters:
+- name: SRC_PATH_CODE
+  default: ''
+
+steps:
+- task: Bash@3
+  displayName: Preparing Code Resources
+  inputs:
+    targetType: 'inline'
+    script: |
+      #!/bin/bash 
+      if [ ! -d $(SRC_PATH_CODE) ]
+      then
+          echo "INFO - Code folder does not exist. Creating.........."
+          mkdir $(SRC_PATH_CODE)
+      else
+          echo "INFO - Code folder already exist. ............................."
+      fi
+      # Working with the Properties folder
+      echo "INFO - Uncompressing the Code Resources zip file........"
+      sourceAlias="_"$(Build.DefinitionName)
+      #unzip $(System.DefaultWorkingDirectory)/_65343-0001-indiagu-dp-igu-PROP/dp-igu-resources/igu_code_resources.zip -d $(SRC_PATH_CODE)
+      unzip $(System.ArtifactsDirectory)/code_prop/*.zip -d $(SRC_PATH_CODE)
+      echo "INFO - Copying the resources to the target folder........."
+      echo "INFO - Resources source path: $(SRC_PATH_CODE)"
+      cp -R $(SRC_PATH_CODE)/*/*  $(SRC_PATH_CODE)
+      rm -rf $(SRC_PATH_CODE)/*/
+      echo "INFO - Target folder after activity ........................................"
+      echo $(SRC_PATH_CODE)
+      cd $(SRC_PATH_CODE)
+      ls -lrt

@@ -1,0 +1,51 @@
+################################################################################################################################
+# This is a wrapper yml used as a Release Pipeline.. this is using release-deploy-template.yml and release-destroy-template.yml  
+# under azure-pipelines-template ; running all tasks related to deploy/destroy process.
+#################################################################################################################################
+
+# To run pipeline by only using scheduled triggers, you disable PR and continuous integration triggers
+# by specifying pr: none and trigger: none in YAML file.
+
+pr : none
+trigger: none
+
+
+
+pool:
+  name: Azure Pipelines
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - template: env-config/common-variables.yml
+    parameters:
+       action:
+  - ${{ if eq(variables['Build.SourceBranchName'], 'sbx') }}: # only works if this is sandbox branch
+    - group: cfgen2-sm-http-hashi-sbx
+    - group: cfgen2-cloudscheduler-sm-http-hashi-sbx
+  - ${{ if eq(variables['Build.SourceBranchName'], 'nonprod') }}: # only works if this is nonprod branch
+    - group: cloud-function-hashi-npd
+    - group: cloud-scheduler-cfgen2-hashi-npd
+  - ${{ if eq(variables['Build.SourceBranchName'], 'prod') }}: # only works if this is prod branch
+    - group: cfgen2-sm-http-hashi-prd
+    - group: cfgen2-cloudscheduler-sm-http-hashi-prd
+  - ${{ if eq(variables['Build.SourceBranchName'], 'prod1') }}: # only works if this is prod branch
+    - group: cfgen2-sm-http-hashi-prd
+    - group: cfgen2-cloudscheduler-sm-http-hashi-prd
+
+
+# Stage for different env
+####################################################
+########### Deploy and Destroy #############
+####################################################
+stages:
+  - template: azure-pipelines-template/release-cs-deploy-destroy-template.yml
+    parameters:
+      AIR_ID: $(AIR_ID)
+      GCP_PROJECT_ID: $(GCP_PROJECT_ID)
+      build_pipeline_name: $(BuildPipelineName)
+      SRC_PATH_TF_CODE: $(SRC_PATH_TF_CODE)
+      TOOL_TF_VERSION: $(TOOL_TF_VERSION)
+      HASHI_ENDPOINT: $(HASHI_ENDPOINT)
+      SECRET_ENV: $(SECRET_ENV)
+      GCP_ROLESET_NAME: $(GCP_ROLESET_NAME)  
+      AZ_ROLESET_NAME: $(AZ_ROLESET_NAME)

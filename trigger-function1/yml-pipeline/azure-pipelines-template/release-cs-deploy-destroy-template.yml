@@ -1,0 +1,116 @@
+############################################################################################################
+# This YML is consuming all the tasks templates from release-task-templates.
+# It takes parameters required from all different tasks along with tf-deploy
+############################################################################################################
+
+parameters:
+- name: AIR_ID
+  default: ''
+- name: GCP_PROJECT_ID
+  default: ''
+- name: build_pipeline_name
+  default: ''
+- name: SRC_PATH_TF_CODE
+  default: ''
+- name: TOOL_TF_VERSION
+  default: ''
+- name: HASHI_ENDPOINT
+  default: ''
+- name: SECRET_ENV
+  default: ''
+- name: GCP_ROLESET_NAME
+  default: ''
+- name: AZ_ROLESET_NAME
+  default: ''
+
+
+
+
+
+
+stages:
+- stage: Resource_Execution
+  jobs:
+  - job: Deploy_Scheduler
+    condition: eq(variables['ACTION'], 'deploy_scheduler')
+    steps:
+      - template: release-task-templates/tf_registry_connection.yml
+
+      - template: release-task-templates/Scan-tasks.yml
+        parameters:
+          AIR_ID: ${{ parameters.AIR_ID }}
+
+      - template: release-task-templates/hashicorp_vault_credentials.yml
+        parameters:
+          HASHI_ENDPOINT: ${{ parameters.HASHI_ENDPOINT }}
+          SECRET_ENV: ${{ parameters.SECRET_ENV }}
+          GCP_ROLESET_NAME: ${{ parameters.GCP_ROLESET_NAME }}
+          AZ_ROLESET_NAME: ${{ parameters.AZ_ROLESET_NAME }}
+
+      - template: release-task-templates/download-pipeline-artifacts.yml
+        parameters:
+          build_pipeline_name: ${{ parameters.build_pipeline_name }}
+
+      - template: release-task-templates/prepare-tf-code.yml
+        parameters:
+          SRC_PATH_TF_CODE: ${{ parameters.SRC_PATH_TF_CODE }}
+
+      - template: release-task-templates/token-replacement.yml
+        parameters:
+          INPUT_DIR_FILE: [{"dir_name": "${{ parameters.SRC_PATH_TF_CODE }}/tf_cs_code","file_list":["main.tf","tokenized.terraform._tfvars"]}, {"dir_name": "${{ parameters.SRC_PATH_TF_CODE }}/tf_cs_code/cloudFunction","file_list":["main.py"]}]      
+
+      - template: release-task-templates/install-terraform.yml
+        parameters:
+          TOOL_TF_VERSION: ${{ parameters.TOOL_TF_VERSION }}
+
+      - template: release-task-templates/tf-deploy.yml
+        parameters:
+          workingDir: ${{ parameters.SRC_PATH_TF_CODE }}/tf_cs_code
+
+      - template: release-task-templates/post-build-cleanup.yml
+
+      - template: release-task-templates/hashicorp_vault_remove_lease.yml
+        parameters:
+          HASHI_ENDPOINT: ${{ parameters.HASHI_ENDPOINT }}
+
+  - job: Destroy_Scheduler
+    condition: eq(variables['ACTION'], 'destroy_scheduler')
+    steps:
+      - template: release-task-templates/tf_registry_connection.yml
+
+      - template: release-task-templates/Scan-tasks.yml
+        parameters:
+          AIR_ID: ${{ parameters.AIR_ID }}
+
+      - template: release-task-templates/hashicorp_vault_credentials.yml
+        parameters:
+          HASHI_ENDPOINT: ${{ parameters.HASHI_ENDPOINT }}
+          SECRET_ENV: ${{ parameters.SECRET_ENV }}
+          GCP_ROLESET_NAME: ${{ parameters.GCP_ROLESET_NAME }}
+          AZ_ROLESET_NAME: ${{ parameters.AZ_ROLESET_NAME }}
+
+      - template: release-task-templates/download-pipeline-artifacts.yml
+        parameters:
+          build_pipeline_name: ${{ parameters.build_pipeline_name }}
+
+      - template: release-task-templates/prepare-tf-code.yml
+        parameters:
+          SRC_PATH_TF_CODE: ${{ parameters.SRC_PATH_TF_CODE }}
+
+      - template: release-task-templates/token-replacement.yml
+        parameters:
+          INPUT_DIR_FILE: [{"dir_name": "${{ parameters.SRC_PATH_TF_CODE }}/tf_cs_code","file_list":["main.tf","tokenized.terraform._tfvars"]}, {"dir_name": "${{ parameters.SRC_PATH_TF_CODE }}/tf_cs_code/cloudFunction","file_list":["main.py"]}]      
+
+      - template: release-task-templates/install-terraform.yml
+        parameters:
+          TOOL_TF_VERSION: ${{ parameters.TOOL_TF_VERSION }}
+
+      - template: release-task-templates/tf-destroy.yml
+        parameters:
+          workingDir: ${{ parameters.SRC_PATH_TF_CODE }}/tf_cs_code
+
+      - template: release-task-templates/post-build-cleanup.yml
+
+      - template: release-task-templates/hashicorp_vault_remove_lease.yml
+        parameters:
+          HASHI_ENDPOINT: ${{ parameters.HASHI_ENDPOINT }}
